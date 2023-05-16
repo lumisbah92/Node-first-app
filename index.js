@@ -1,9 +1,28 @@
+const config = require('config');
+const helmet = require('helmet');
 const Joi = require('joi');
+const logger = require('./logger');
+const authenticate = require('./authenticate');
 const express = require('express');
-const { Schema } = require('mongoose');
 const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+app.use(express.static('public'));
+
+// configuration
+console.log('App name: '+config.get('name'));
+console.log('mail: '+config.get('mail.host'));
+console.log('mail password: '+config.get('mail.password'));
+
+
+if(app.get('env')==="development") {
+    app.use(helmet());
+    console.log("Helmet Enabled");
+}
+
+app.use(logger);
+app.use(authenticate);
 
 const courses = [
     { id: 1, name: "course1" },
@@ -13,7 +32,7 @@ const courses = [
 
 function validateCourse(course) {
     const schema = Joi.object({
-        name: Joi.string().min(3).required(),
+        name: Joi.string().min(3).required(), 
     });
 
     return schema.validate(course);
